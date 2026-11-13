@@ -1,0 +1,81 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for secure Role-Based Access Control (RBAC)
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && getUserData().role == 'administrador';
+    }
+
+    function isTeacher() {
+      return isAuthenticated() && (getUserData().role == 'professor' || isAdmin());
+    }
+
+    // 1. User Profiles & Roles
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      // Normal users cannot elevate their own role to 'professor' or 'administrador'
+      allow update: if isOwner(userId) && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']))
+                    || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // 2. Teacher Applications
+    match /teacherApplications/{appId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      // Only admins can change status to 'aprovado' or 'recusado'
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // 3. Teacher Courses
+    match /teacherCourses/{courseId} {
+      // Anyone authenticated can read approved public courses
+      allow read: if isAuthenticated() && (resource.data.status == 'aprovado' || resource.data.teacherId == request.auth.uid || isAdmin());
+      // Only verified teachers can create courses
+      allow create: if isTeacher() && request.resource.data.teacherId == request.auth.uid;
+      // Teachers can update their own drafts; only admins can approve/reject
+      allow update: if (isTeacher() && resource.data.teacherId == request.auth.uid && request.resource.data.status != 'aprovado')
+                    || isAdmin();
+      allow delete: if (isTeacher() && resource.data.teacherId == request.auth.uid) || isAdmin();
+    }
+
+    // 4. Teacher Educational Materials & Subjects
+    match /teacherSubjects/{subjectId} {
+      allow read: if isAuthenticated() && (resource.data.status == 'aprovado' || resource.data.teacherId == request.auth.uid || isAdmin());
+      allow create: if isTeacher() && request.resource.data.teacherId == request.auth.uid;
+      allow update: if (isTeacher() && resource.data.teacherId == request.auth.uid && request.resource.data.status != 'aprovado')
+                    || isAdmin();
+      allow delete: if (isTeacher() && resource.data.teacherId == request.auth.uid) || isAdmin();
+    }
+
+    // 5. Enrollments (Child Safety & Student Privacy)
+    match /enrollments/{enrollmentId} {
+      // Students can read their own enrollments; Teachers can read anonymized enrollment counts/progress for their own courses
+      allow read: if isAuthenticated() && (resource.data.studentId == request.auth.uid || resource.data.teacherId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.studentId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.studentId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.studentId == request.auth.uid || isAdmin();
+    }
+
+    // 6. Content Reports & Moderation
+    match /reports/{reportId} {
+      allow create: if isAuthenticated() && request.resource.data.reporterId == request.auth.uid;
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

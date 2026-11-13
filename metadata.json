@@ -1,0 +1,6 @@
+{
+  "name": "MINDORA — Plataforma Inteligente de Aprendizagem",
+  "description": "Plataforma educativa com 15 matérias interativas, 5 jogos cognitivos, pesquisa inteligente, quizzes, cursos estruturados e acompanhamento de progresso com XP.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,87 @@
+{
+  "project": "mindora-teachers",
+  "version": "2.0.0",
+  "entities": {
+    "users": {
+      "description": "User profiles with roles: estudante, professor, administrador",
+      "fields": {
+        "id": "string",
+        "name": "string",
+        "email": "string",
+        "role": "string",
+        "xp": "number",
+        "avatarEmoji": "string",
+        "isTeacherApproved": "boolean"
+      }
+    },
+    "teacherApplications": {
+      "description": "Candidaturas de utilizadores para se tornarem Professores verificados",
+      "fields": {
+        "id": "string",
+        "userId": "string",
+        "name": "string",
+        "email": "string",
+        "specialty": "string",
+        "subjectsTaught": "array",
+        "bio": "string",
+        "experience": "string",
+        "agreementAccepted": "boolean",
+        "status": "string (pendente | aprovado | recusado)",
+        "submittedAt": "string",
+        "reviewedAt": "string",
+        "adminNotes": "string"
+      }
+    },
+    "teacherCourses": {
+      "description": "Cursos educativos gratuitos criados por professores",
+      "fields": {
+        "id": "string",
+        "teacherId": "string",
+        "teacherName": "string",
+        "title": "string",
+        "description": "string",
+        "category": "string",
+        "level": "string",
+        "modules": "array",
+        "status": "string (rascunho | em_analise | aprovado | recusado)",
+        "enrolledCount": "number",
+        "averageRating": "number"
+      }
+    },
+    "teacherSubjects": {
+      "description": "Matérias e lições didáticas criadas por professores",
+      "fields": {
+        "id": "string",
+        "teacherId": "string",
+        "teacherName": "string",
+        "title": "string",
+        "discipline": "string",
+        "fullExplanation": "string",
+        "exercises": "array",
+        "status": "string (rascunho | em_analise | aprovado | recusado)"
+      }
+    },
+    "enrollments": {
+      "description": "Inscrições gratuitas de estudantes em cursos com proteção de dados pessoais",
+      "fields": {
+        "id": "string",
+        "courseId": "string",
+        "studentId": "string",
+        "studentName": "string",
+        "progress": "number",
+        "completedLessonIds": "array"
+      }
+    },
+    "reports": {
+      "description": "Denúncias de conteúdo para análise e moderação administrativa",
+      "fields": {
+        "id": "string",
+        "contentId": "string",
+        "contentType": "string",
+        "reporterId": "string",
+        "reason": "string",
+        "status": "string (pendente | resolvido | descartado)"
+      }
+    }
+  }
+}
